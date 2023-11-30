@@ -1,0 +1,119 @@
+<?php
+
+/** @var \TongGarden\GenerateShipment\Block\Orders $block */
+
+// $orders = $block->getOrderCollectionByDateRange();
+
+?>
+<div>
+    <h3>Export Unshipped Orders</h3>
+</div>
+<div class="field">
+    <label>From : </label>
+    <input type="text" class="input-text" id="fromDate" style="width: auto" name="start-date" />
+    <label>To : </label>
+    <input type="text" class="input-text" id="toDate" style="width: auto" name="end-date" />
+    <button  type="button" id="filterButton" >Filter</button>
+    <button type="button" id="exportButton">Export Orders</button>
+</div>
+
+
+<!-- export order -->
+<script>
+    require([
+        'jquery'
+    ], function($) {
+        $(document).ready(function() {
+var exportUrl = 'generateship/order/export';
+            $('#exportButton').on('click', function() {
+  // Create a hidden iframe
+  var iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    // Create and open a new XHR object
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', exportUrl, true);
+    xhr.responseType = 'blob'; // Set the response type to blob
+
+    // Event listener for when the XHR request is complete
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            // Create a Blob object and initiate the download
+            var blob = new Blob([xhr.response], { type: 'application/csv' }); // Adjust content type if needed
+            var url = window.URL.createObjectURL(blob);
+
+            // Create a temporary link and trigger the download
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'orders.csv'; // Set the desired filename
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            console.error('Error exporting orders. Status:', xhr.status);
+        }
+
+        // Remove the iframe after the download is complete
+        document.body.removeChild(iframe);
+    };
+
+    // Send the XHR request
+    xhr.send();
+
+                // Make AJAX request
+                $.ajax({
+                    url: '<?php echo $block->getUrl('generateship/order/export'); ?>',
+                    type: 'GET',
+                    success: function(data) {
+                        // Handle success, e.g., show a success message
+                        console.log('Export successful!');
+                    },
+                    error: function() {
+                        // Handle error, e.g., show an error message
+                        console.error('Export failed!');
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+<!-- filter order -->
+<script>
+    require([
+        'jquery',
+        'mage/translate',
+        'mage/calendar'
+    ], function($, $t) {
+        $('#fromDate, #toDate').calendar({
+            changeMonth: true,
+            changeYear: true,
+            showButtonPanel: true,
+            currentText: $t('Go Today'),
+            closeText: $t('Close'),
+            showWeek: true,
+            showOn: "both",
+        });
+
+        $(document).ready(function() {
+            $('#filterButton').click(function() {
+                var fromDate = $('#fromDate').val();
+                var toDate = $('#toDate').val();
+                console.log(fromDate);
+                console.log(toDate);
+                $.ajax({
+                    url: 'generateship/index/index/',
+                    type: 'POST',
+                    data: {
+                        from_date: fromDate,
+                        to_date: toDate
+                    },
+                    success: function(response) {
+                        $('#result-container').text('hello');
+                    }
+                });
+            });
+        });
+    })
+</script>
